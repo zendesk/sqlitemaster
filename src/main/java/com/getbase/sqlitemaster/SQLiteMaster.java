@@ -16,12 +16,6 @@
 
 package com.getbase.sqlitemaster;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-
 import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteCursorDriver;
@@ -29,6 +23,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteQuery;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class SQLiteMaster {
@@ -86,7 +81,7 @@ public final class SQLiteMaster {
   }
 
   private static List<SQLiteSchemaPart> getSQLiteSchemaParts(Cursor c) {
-    List<SQLiteSchemaPart> result = Lists.newArrayList();
+    List<SQLiteSchemaPart> result = new ArrayList<SQLiteSchemaPart>();
     if (c != null) {
       try {
         if (c.moveToFirst()) {
@@ -105,48 +100,23 @@ public final class SQLiteMaster {
     return result;
   }
 
-  private static final Function<SQLiteSchemaPart, String> GET_SCHEMA_PART_NAME = new Function<SQLiteSchemaPart, String>() {
-    @Override
-    public String apply(SQLiteSchemaPart input) {
-      return input.name;
-    }
-  };
-
   public static void dropTriggers(SQLiteDatabase db) {
-    Iterable<String> triggerNames = FluentIterable
-        .from(getSQLiteSchemaParts(db, SQLiteSchemaPartType.TRIGGER))
-        .transform(GET_SCHEMA_PART_NAME);
-
-    for (String triggerName : triggerNames) {
-      db.execSQL("DROP TRIGGER IF EXISTS " + triggerName);
+    for (SQLiteSchemaPart trigger : getSQLiteSchemaParts(db, SQLiteSchemaPartType.TRIGGER)) {
+      db.execSQL("DROP TRIGGER IF EXISTS " + trigger.name);
     }
   }
 
-  private static final Predicate<SQLiteSchemaPart> IS_AUTO_INDEX = new Predicate<SQLiteSchemaPart>() {
-    @Override
-    public boolean apply(SQLiteSchemaPart input) {
-      return input.name.startsWith("sqlite_");
-    }
-  };
-
   public static void dropIndexes(SQLiteDatabase db) {
-    Iterable<String> indexNames = FluentIterable
-        .from(getSQLiteSchemaParts(db, SQLiteSchemaPartType.INDEX))
-        .filter(Predicates.not(IS_AUTO_INDEX))
-        .transform(GET_SCHEMA_PART_NAME);
-
-    for (String indexName : indexNames) {
-      db.execSQL("DROP INDEX IF EXISTS " + indexName);
+    for (SQLiteSchemaPart index : getSQLiteSchemaParts(db, SQLiteSchemaPartType.INDEX)) {
+      if (!index.name.startsWith("sqlite_")) {
+        db.execSQL("DROP VIEW IF EXISTS " + index.name);
+      }
     }
   }
 
   public static void dropViews(SQLiteDatabase db) {
-    Iterable<String> viewsNames = FluentIterable
-        .from(getSQLiteSchemaParts(db, SQLiteSchemaPartType.VIEW))
-        .transform(GET_SCHEMA_PART_NAME);
-
-    for (String viewName : viewsNames) {
-      db.execSQL("drop view if exists " + viewName);
+    for (SQLiteSchemaPart view : getSQLiteSchemaParts(db, SQLiteSchemaPartType.VIEW)) {
+      db.execSQL("DROP VIEW IF EXISTS " + view.name);
     }
   }
 }
