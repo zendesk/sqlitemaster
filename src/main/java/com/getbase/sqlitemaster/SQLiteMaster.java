@@ -109,7 +109,7 @@ public final class SQLiteMaster {
   public static void dropIndexes(SQLiteDatabase db) {
     for (SQLiteSchemaPart index : getSQLiteSchemaParts(db, SQLiteSchemaPartType.INDEX)) {
       if (!index.name.startsWith("sqlite_")) {
-        db.execSQL("DROP VIEW IF EXISTS " + index.name);
+        db.execSQL("DROP INDEX IF EXISTS " + index.name);
       }
     }
   }
