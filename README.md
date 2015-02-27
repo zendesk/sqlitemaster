@@ -1,3 +1,7 @@
+DEPRECATED
+==========
+This library was incorporated into [android-schema-utils](https://github.com/futuresimple/android-schema-utils) library.
+
 SQLiteMaster
 ============
 Android library for getting existing db schema information from sqlite_master table.
